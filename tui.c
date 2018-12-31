@@ -97,48 +97,66 @@ on_window_key_press(GtkWidget *widget, GdkEventKey *event, gpointer userdata) {
 int
 main(int argc, char *argv[])
 {
-    GtkWidget *window, *terminal;
+  GtkWidget *window, *terminal, *overlay, *cmdline;
+  tui_t tui;
 
-    /* Initialise GTK, the window and the terminal */
-    gtk_init(&argc, &argv);
-    terminal = vte_terminal_new();
-    window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_window_set_title(GTK_WINDOW(window), "tui");
+  /* Initialise GTK, the window and the terminal */
+  gtk_init(&argc, &argv);
 
-    vte_terminal_set_colors(
-        VTE_TERMINAL(terminal),
-        NULL,
-        NULL,
-        GRUVBOX,
-        PALETTE_SIZE);
+  terminal = vte_terminal_new();
+  overlay = gtk_overlay_new();
+  cmdline = gtk_entry_new();
 
-    vte_terminal_set_scrollback_lines(VTE_TERMINAL(terminal), 8192);
-    vte_terminal_set_scroll_on_output(VTE_TERMINAL(terminal), FALSE);
-    vte_terminal_set_scroll_on_keystroke(VTE_TERMINAL(terminal), TRUE);
-    vte_terminal_set_rewrap_on_resize(VTE_TERMINAL(terminal), TRUE);
-    vte_terminal_set_mouse_autohide(VTE_TERMINAL(terminal), TRUE);
-    vte_terminal_set_allow_bold(VTE_TERMINAL(terminal), FALSE);
+  window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+  gtk_window_set_title(GTK_WINDOW(window), "tui");
+  gtk_widget_set_valign(cmdline, GTK_ALIGN_END);
 
-    /* Start a new shell */
-    gchar **envp = g_get_environ();
-    gchar **command = (gchar *[]){g_strdup(g_environ_getenv(envp, "SHELL")), NULL };
-    g_strfreev(envp);
-    vte_terminal_spawn_sync(VTE_TERMINAL(terminal),
-        VTE_PTY_DEFAULT,
-        NULL,       /* working directory  */
-        command,    /* command */
-        NULL,       /* environment */
-        0,          /* spawn flags */
-        NULL, NULL, /* child setup */
-        NULL,       /* child pid */
-        NULL, NULL);
+  vte_terminal_set_colors(
+      VTE_TERMINAL(terminal),
+      NULL,
+      NULL,
+      GRUVBOX,
+      PALETTE_SIZE);
 
-    /* Connect some signals */
-    g_signal_connect(window, "delete-event", gtk_main_quit, NULL);
-    g_signal_connect(terminal, "child-exited", gtk_main_quit, NULL);
+  vte_terminal_set_scrollback_lines(VTE_TERMINAL(terminal), 8192);
+  vte_terminal_set_scroll_on_output(VTE_TERMINAL(terminal), FALSE);
+  vte_terminal_set_scroll_on_keystroke(VTE_TERMINAL(terminal), TRUE);
+  vte_terminal_set_rewrap_on_resize(VTE_TERMINAL(terminal), TRUE);
+  vte_terminal_set_mouse_autohide(VTE_TERMINAL(terminal), TRUE);
+  vte_terminal_set_allow_bold(VTE_TERMINAL(terminal), FALSE);
 
-    /* Put widgets together and run the main loop */
-    gtk_container_add(GTK_CONTAINER(window), terminal);
-    gtk_widget_show_all(window);
-    gtk_main();
+  tui.window = window;
+  tui.overlay = overlay;
+  tui.cmdline = cmdline;
+  tui.terminal = terminal;
+  tui.cmdline_visible = FALSE;
+
+  /* Start a new shell */
+  gchar **envp = g_get_environ();
+  gchar **command = (gchar *[]){g_strdup(g_environ_getenv(envp, "SHELL")), NULL };
+  g_strfreev(envp);
+  vte_terminal_spawn_sync(VTE_TERMINAL(terminal),
+      VTE_PTY_DEFAULT,
+      NULL,       /* working directory  */
+      command,    /* command */
+      NULL,       /* environment */
+      0,          /* spawn flags */
+      NULL, NULL, /* child setup */
+      NULL,       /* child pid */
+      NULL, NULL);
+
+  /* Connect some signals */
+  g_signal_connect(window, "delete-event", gtk_main_quit, NULL);
+  g_signal_connect(terminal, "child-exited", gtk_main_quit, NULL);
+  g_signal_connect(window, "key-press-event", G_CALLBACK(on_window_key_press), &tui);
+  g_signal_connect(cmdline, "focus-out-event", G_CALLBACK(on_entry_focus_out), &tui);
+
+  /* Put widgets together and run the main loop */
+  gtk_container_add(GTK_CONTAINER(window), overlay);
+  gtk_overlay_add_overlay(GTK_OVERLAY(overlay), cmdline);
+  gtk_overlay_add_overlay(GTK_OVERLAY(overlay), terminal);
+  gtk_window_set_focus(GTK_WINDOW(window), terminal);
+
+  gtk_widget_show_all(window);
+  gtk_main();
 }
