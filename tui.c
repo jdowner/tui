@@ -12,6 +12,8 @@
 
 #define PALETTE_SIZE 16
 
+#define MOD_KEY (GDK_CONTROL_MASK | GDK_SHIFT_MASK)
+
 static const GdkRGBA GRUVBOX[PALETTE_SIZE] = {
   CLR_GDK(0x1e1e1e),
   CLR_GDK(0xbe0f17),
