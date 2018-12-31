@@ -41,6 +41,27 @@ typedef struct {
   gboolean cmdline_visible;
 } tui_t;
 
+void
+tui_cmdline_show(tui_t *tui){
+  if(!tui->cmdline_visible) {
+    tui->cmdline_visible = TRUE;
+    gtk_overlay_reorder_overlay(GTK_OVERLAY(tui->overlay), tui->terminal, 0);
+    gtk_overlay_reorder_overlay(GTK_OVERLAY(tui->overlay), tui->cmdline, 1);
+    gtk_window_set_focus(GTK_WINDOW(tui->window), tui->cmdline);
+  }
+}
+
+void
+tui_cmdline_hide(tui_t *tui){
+  if(tui->cmdline_visible) {
+    tui->cmdline_visible = FALSE;
+    gtk_entry_set_text(GTK_ENTRY(tui->cmdline), "");
+    gtk_overlay_reorder_overlay(GTK_OVERLAY(tui->overlay), tui->terminal, 1);
+    gtk_overlay_reorder_overlay(GTK_OVERLAY(tui->overlay), tui->cmdline, 0);
+    gtk_window_set_focus(GTK_WINDOW(tui->window), tui->terminal);
+  }
+}
+
 int
 main(int argc, char *argv[])
 {
