@@ -62,6 +62,13 @@ tui_cmdline_hide(tui_t *tui){
   }
 }
 
+
+static gboolean
+on_entry_focus_out(GtkWidget *widget, GdkEventFocus *event, gpointer userdata) {
+  tui_cmdline_hide((tui_t*)userdata);
+  return FALSE;
+}
+
 int
 main(int argc, char *argv[])
 {
