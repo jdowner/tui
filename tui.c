@@ -33,6 +33,14 @@ static const GdkRGBA GRUVBOX[PALETTE_SIZE] = {
   CLR_GDK(0xe6d4a3),
 };
 
+typedef struct {
+  GtkWidget *window;
+  GtkWidget *cmdline;
+  GtkWidget *terminal;
+  GtkWidget *overlay;
+  gboolean cmdline_visible;
+} tui_t;
+
 int
 main(int argc, char *argv[])
 {
