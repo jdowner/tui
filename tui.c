@@ -69,6 +69,31 @@ on_entry_focus_out(GtkWidget *widget, GdkEventFocus *event, gpointer userdata) {
   return FALSE;
 }
 
+static gboolean
+on_window_key_press(GtkWidget *widget, GdkEventKey *event, gpointer userdata) {
+  if(event->type != GDK_KEY_PRESS) {
+    return FALSE;
+  }
+
+  tui_t *tui = (tui_t*)userdata;
+
+  if((event->state & MOD_KEY) == MOD_KEY){
+    if(event->keyval == GDK_KEY_colon) {
+      tui_cmdline_show(tui);
+      return TRUE;
+    }
+  }
+
+  if(event->keyval == GDK_KEY_Escape) {
+    if(((tui_t*)userdata)->cmdline_visible) {
+      tui_cmdline_hide(tui);
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
 int
 main(int argc, char *argv[])
 {
