@@ -91,6 +91,20 @@ on_window_key_press(GtkWidget *widget, GdkEventKey *event, gpointer userdata) {
     }
   }
 
+  if((event->state & MOD_KEY) == MOD_KEY){
+    if(event->keyval == GDK_KEY_P) {
+      vte_terminal_paste_clipboard((VteTerminal*)tui->terminal);
+      return TRUE;
+    }
+  }
+
+  if((event->state & MOD_KEY) == MOD_KEY){
+    if(event->keyval == GDK_KEY_Y) {
+      vte_terminal_copy_clipboard((VteTerminal*)tui->terminal);
+      return TRUE;
+    }
+  }
+
   return FALSE;
 }
 
