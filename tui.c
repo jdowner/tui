@@ -103,13 +103,15 @@ main(int argc, char *argv[])
   /* Initialise GTK, the window and the terminal */
   gtk_init(&argc, &argv);
 
-  terminal = vte_terminal_new();
   overlay = gtk_overlay_new();
   cmdline = gtk_entry_new();
 
   window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   gtk_window_set_title(GTK_WINDOW(window), "tui");
   gtk_widget_set_valign(cmdline, GTK_ALIGN_END);
+
+  /* Create the terminal widget */
+  terminal = vte_terminal_new();
 
   vte_terminal_set_colors(
       VTE_TERMINAL(terminal),
@@ -125,6 +127,7 @@ main(int argc, char *argv[])
   vte_terminal_set_mouse_autohide(VTE_TERMINAL(terminal), TRUE);
   vte_terminal_set_allow_bold(VTE_TERMINAL(terminal), FALSE);
 
+  /* Initialize the tui structure */
   tui.window = window;
   tui.overlay = overlay;
   tui.cmdline = cmdline;
