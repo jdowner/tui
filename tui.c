@@ -1,4 +1,5 @@
 #include <vte/vte.h>
+#include <pango/pango.h>
 
 
 #define CLR_R(x)   (((x) & 0xff0000) >> 16)
@@ -39,6 +40,7 @@ typedef struct {
   GtkWidget *terminal;
   GtkWidget *overlay;
   gboolean cmdline_visible;
+  PangoFontDescription *font;
 } tui_t;
 
 void
