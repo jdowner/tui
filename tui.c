@@ -95,6 +95,23 @@ tui_cmdline_hide(tui_t *tui){
   }
 }
 
+void
+tui_increase_font_size(tui_t *tui){
+  pango_font_description_set_size(tui->font,
+      pango_font_description_get_size(tui->font) + PANGO_SCALE);
+
+  vte_terminal_set_font(VTE_TERMINAL(tui->terminal), tui->font);
+}
+
+void
+tui_decrease_font_size(tui_t *tui){
+  gint size = pango_font_description_get_size(tui->font);
+
+  if(size > 5 * PANGO_SCALE){
+    pango_font_description_set_size(tui->font, size - PANGO_SCALE);
+    vte_terminal_set_font(VTE_TERMINAL(tui->terminal), tui->font);
+  }
+}
 
 static gboolean
 on_entry_focus_out(GtkWidget *widget, GdkEventFocus *event, gpointer userdata) {
@@ -134,6 +151,20 @@ on_window_key_press(GtkWidget *widget, GdkEventKey *event, gpointer userdata) {
   if((event->state & MOD_KEY) == MOD_KEY){
     if(event->keyval == GDK_KEY_Y) {
       vte_terminal_copy_clipboard((VteTerminal*)tui->terminal);
+      return TRUE;
+    }
+  }
+
+  if((event->state & MOD_KEY) == MOD_KEY){
+    if(event->keyval == GDK_KEY_Up) {
+      tui_increase_font_size(tui);
+      return TRUE;
+    }
+  }
+
+  if((event->state & MOD_KEY) == MOD_KEY){
+    if(event->keyval == GDK_KEY_Down) {
+      tui_decrease_font_size(tui);
       return TRUE;
     }
   }
