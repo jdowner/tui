@@ -1,4 +1,6 @@
 #include <vte/vte.h>
+#include <pango/pango.h>
+#include <stdlib.h>
 
 
 #define CLR_R(x)   (((x) & 0xff0000) >> 16)
@@ -39,7 +41,38 @@ typedef struct {
   GtkWidget *terminal;
   GtkWidget *overlay;
   gboolean cmdline_visible;
+  PangoFontDescription *font;
 } tui_t;
+
+tui_t *tui_create() {
+  tui_t *tui;
+
+  tui = (tui_t*)malloc(sizeof(tui_t));
+  tui->window = NULL;
+  tui->cmdline = NULL;
+  tui->terminal = NULL;
+  tui->overlay = NULL;
+  tui->cmdline_visible = FALSE;
+
+  tui->font = pango_font_description_from_string("DejaVu Sans Mono,monospace 13");
+
+  return tui;
+}
+
+void tui_destroy(tui_t **ref) {
+  tui_t *tui = *ref;
+
+  pango_font_description_free(tui->font);
+  tui->window = NULL;
+  tui->cmdline = NULL;
+  tui->terminal = NULL;
+  tui->overlay = NULL;
+  tui->cmdline_visible = FALSE;
+
+  free(tui);
+
+  *ref = NULL;
+}
 
 void
 tui_cmdline_show(tui_t *tui){
@@ -62,6 +95,23 @@ tui_cmdline_hide(tui_t *tui){
   }
 }
 
+void
+tui_increase_font_size(tui_t *tui){
+  pango_font_description_set_size(tui->font,
+      pango_font_description_get_size(tui->font) + PANGO_SCALE);
+
+  vte_terminal_set_font(VTE_TERMINAL(tui->terminal), tui->font);
+}
+
+void
+tui_decrease_font_size(tui_t *tui){
+  gint size = pango_font_description_get_size(tui->font);
+
+  if(size > 5 * PANGO_SCALE){
+    pango_font_description_set_size(tui->font, size - PANGO_SCALE);
+    vte_terminal_set_font(VTE_TERMINAL(tui->terminal), tui->font);
+  }
+}
 
 static gboolean
 on_entry_focus_out(GtkWidget *widget, GdkEventFocus *event, gpointer userdata) {
@@ -105,6 +155,20 @@ on_window_key_press(GtkWidget *widget, GdkEventKey *event, gpointer userdata) {
     }
   }
 
+  if((event->state & MOD_KEY) == MOD_KEY){
+    if(event->keyval == GDK_KEY_Up) {
+      tui_increase_font_size(tui);
+      return TRUE;
+    }
+  }
+
+  if((event->state & MOD_KEY) == MOD_KEY){
+    if(event->keyval == GDK_KEY_Down) {
+      tui_decrease_font_size(tui);
+      return TRUE;
+    }
+  }
+
   return FALSE;
 }
 
@@ -112,7 +176,9 @@ int
 main(int argc, char *argv[])
 {
   GtkWidget *window, *terminal, *overlay, *cmdline;
-  tui_t tui;
+  tui_t *tui;
+
+  tui = tui_create();
 
   /* Initialise GTK, the window and the terminal */
   gtk_init(&argc, &argv);
@@ -142,11 +208,11 @@ main(int argc, char *argv[])
   vte_terminal_set_allow_bold(VTE_TERMINAL(terminal), FALSE);
 
   /* Initialize the tui structure */
-  tui.window = window;
-  tui.overlay = overlay;
-  tui.cmdline = cmdline;
-  tui.terminal = terminal;
-  tui.cmdline_visible = FALSE;
+  tui->window = window;
+  tui->overlay = overlay;
+  tui->cmdline = cmdline;
+  tui->terminal = terminal;
+  tui->cmdline_visible = FALSE;
 
   /* Start a new shell */
   gchar **envp = g_get_environ();
@@ -165,8 +231,8 @@ main(int argc, char *argv[])
   /* Connect some signals */
   g_signal_connect(window, "delete-event", gtk_main_quit, NULL);
   g_signal_connect(terminal, "child-exited", gtk_main_quit, NULL);
-  g_signal_connect(window, "key-press-event", G_CALLBACK(on_window_key_press), &tui);
-  g_signal_connect(cmdline, "focus-out-event", G_CALLBACK(on_entry_focus_out), &tui);
+  g_signal_connect(window, "key-press-event", G_CALLBACK(on_window_key_press), tui);
+  g_signal_connect(cmdline, "focus-out-event", G_CALLBACK(on_entry_focus_out), tui);
 
   /* Put widgets together and run the main loop */
   gtk_container_add(GTK_CONTAINER(window), overlay);
@@ -176,4 +242,6 @@ main(int argc, char *argv[])
 
   gtk_widget_show_all(window);
   gtk_main();
+
+  tui_destroy(&tui);
 }
