@@ -54,7 +54,7 @@ tui_t *tui_create() {
   tui->overlay = NULL;
   tui->cmdline_visible = FALSE;
 
-  tui->font = pango_font_description_from_string("DejaVu Sans Mono,monospace 13");
+  tui->font = pango_font_description_from_string("DejaVu Sans Mono,monospace 14");
 
   return tui;
 }
@@ -213,6 +213,9 @@ main(int argc, char *argv[])
   tui->cmdline = cmdline;
   tui->terminal = terminal;
   tui->cmdline_visible = FALSE;
+
+  /* Initialize the font */
+  vte_terminal_set_font(VTE_TERMINAL(tui->terminal), tui->font);
 
   /* Start a new shell */
   gchar **envp = g_get_environ();
