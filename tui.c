@@ -54,7 +54,7 @@ tui_t *tui_create() {
   tui->overlay = NULL;
   tui->cmdline_visible = FALSE;
 
-  tui->font = pango_font_description_from_string("DejaVu Sans Mono,monospace 13");
+  tui->font = pango_font_description_from_string("DejaVu Sans Mono,monospace 14");
 
   return tui;
 }
