@@ -214,6 +214,9 @@ main(int argc, char *argv[])
   tui->terminal = terminal;
   tui->cmdline_visible = FALSE;
 
+  /* Initialize the font */
+  vte_terminal_set_font(VTE_TERMINAL(tui->terminal), tui->font);
+
   /* Start a new shell */
   gchar **envp = g_get_environ();
   gchar **command = (gchar *[]){g_strdup(g_environ_getenv(envp, "SHELL")), NULL };
